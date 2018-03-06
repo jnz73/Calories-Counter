@@ -42,6 +42,21 @@ const itemCtrl = (function() {
             this.addCalories(newItem);
             return newItem;
         },
+        getItemById: function(id) {
+            let found = null;
+            data.items.forEach(item => {
+                if (item.id === id) {
+                    found = item;
+                }
+            });
+            return found;
+        },
+        setCurentItem: function(item) {
+            data.currentItem = item;
+        },
+        getCurrentItem: function() {
+            return data.currentItem;
+        },
         logData: function() {
             return data;
         },
@@ -65,6 +80,9 @@ const UICtrl = (function() {
     const UISelectors = {
         itemList: '#item-list',
         addBtn: '.add-btn',
+        updateBtn: '.update-btn',
+        deleteBtn: '.delete-btn',
+        backBtn: '.back-btn',
         itemNameInput: '#item-name',
         itemCaloriesInput: '#item-calories',
         totalCalories: '.total-calories'
@@ -120,14 +138,43 @@ const UICtrl = (function() {
         clearFields: function() {
             document.querySelector('form').reset();
         },
+        addItemToForm: function() {
+            document.querySelector(
+                UISelectors.itemNameInput
+            ).value = itemCtrl.getCurrentItem().name;
+            document.querySelector(
+                UISelectors.itemCaloriesInput
+            ).value = itemCtrl.getCurrentItem().calories;
+            UICtrl.showEditState();
+        },
         getSelectors: function() {
             return UISelectors;
         },
         hideList: function() {
             document.querySelector(UISelectors.itemList).style.display = 'none';
-        }
+        },
+        clearEditState: function() {
+            UICtrl.clearFields();
+            // hide update and delete buttons
+            document.querySelector(UISelectors.updateBtn).style.display =
+                'none';
+            document.querySelector(UISelectors.deleteBtn).style.display =
+                'none';
+            document.querySelector(UISelectors.backBtn).style.display = 'none';
+            document.querySelector(UISelectors.addBtn).style.display = 'inline';
+        },
+        showEditState:function() {
+            // hide update and delete buttons
+            document.querySelector(UISelectors.updateBtn).style.display =
+                'inline';
+            document.querySelector(UISelectors.deleteBtn).style.display =
+                'inline';
+            document.querySelector(UISelectors.backBtn).style.display = 'inline';
+            document.querySelector(UISelectors.addBtn).style.display = 'none';
+        },
     };
 })();
+
 // App Controller
 const App = (function(itemCtrl, UICtrl) {
     // Load event listeners
@@ -137,6 +184,10 @@ const App = (function(itemCtrl, UICtrl) {
         document
             .querySelector(UISelectors.addBtn)
             .addEventListener('click', itemAddSubmit);
+        // edit icon click event with event delegation
+        document
+            .querySelector(UISelectors.itemList)
+            .addEventListener('click', itemUpdateSubmit);
     };
     // Add item Submit
     const itemAddSubmit = function(e) {
@@ -157,12 +208,31 @@ const App = (function(itemCtrl, UICtrl) {
         }
         e.preventDefault();
     };
+    // update item submit
+    const itemUpdateSubmit = function(e) {
+        if (e.target.classList.contains('edit-item')) {
+            //get the list item id
+            const listId = e.target.parentNode.parentNode.id;
+            // brake into an array
+            const listIdArr = listId.split('-');
+            const id = parseInt(listIdArr[1]);
+            // get item
+            const itemToEdit = itemCtrl.getItemById(id);
+            console.log(id);
+            console.log(itemToEdit);
+
+            itemCtrl.setCurentItem(itemToEdit);
+            UICtrl.addItemToForm();
+        }
+        e.preventDefault();
+    };
 
     // Public Methods
     return {
         // the initialization of the app
         init: function() {
-            console.log('initializing app...');
+            // set initial state
+            UICtrl.clearEditState();
             // Fetch items from data structure
             const items = itemCtrl.getItems();
 
