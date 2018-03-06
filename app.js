@@ -12,9 +12,9 @@ const itemCtrl = (function() {
     //Data Structure (State)
     const data = {
         items: [
-            { id: 0, name: 'Stake Dinner', calories: 1200 },
-            { id: 1, name: 'Cookie', calories: 400 },
-            { id: 2, name: 'Eggs', calories: 300 }
+            // { id: 0, name: 'Stake Dinner', calories: 1200 },
+            // { id: 1, name: 'Cookie', calories: 400 },
+            // { id: 2, name: 'Eggs', calories: 300 }
         ],
         currentItem: null,
         totalCalories: 0
@@ -36,7 +36,7 @@ const itemCtrl = (function() {
             //Calories to numbers
             calories = parseInt(calories);
             // Create new item
-            newItem = new Item(ID,name,calories);
+            newItem = new Item(ID, name, calories);
             data.items.push(newItem);
             return newItem;
         },
@@ -81,8 +81,30 @@ const UICtrl = (function() {
                     .value
             };
         },
+        addListItem: function(item) {
+            document.querySelector(UISelectors.itemList).style.display = 'block';
+            const li = document.createElement('li');
+            li.className = 'collection-item';
+            li.id = `item-${item.id}`;
+            li.innerHTML = `
+                            <strong>${item.name}: </strong>
+                            <em>${item.calories} Calories</em>
+                            <a href="#" class="secondary-content">
+                                <i class="edit-item fa fa-pencil"></i>
+                            </a>
+                        `;
+            document
+                .querySelector(UISelectors.itemList)
+                .insertAdjacentElement('beforeend', li);
+        },
+        clearFields: function() {
+            document.querySelector('form').reset();
+        },
         getSelectors: function() {
             return UISelectors;
+        },
+        hideList: function() {
+            document.querySelector(UISelectors.itemList).style.display = 'none';
         }
     };
 })();
@@ -102,8 +124,12 @@ const App = (function(itemCtrl, UICtrl) {
         const input = UICtrl.getItemInput();
         // check for correct input
         if (input.name !== '' && input.calories !== '') {
-            // add item
+            // add item to data model
             const newItem = itemCtrl.addItem(input.name, input.calories);
+            // add item to ui list
+            UICtrl.addListItem(newItem);
+            // clean form
+            UICtrl.clearFields();
         }
         e.preventDefault();
     };
@@ -115,8 +141,14 @@ const App = (function(itemCtrl, UICtrl) {
             console.log('initializing app...');
             // Fetch items from data structure
             const items = itemCtrl.getItems();
-            // populate list with items
-            UICtrl.populateItemList(items);
+
+            //check if any items
+            if (items.length === 0) {
+                UICtrl.hideList();
+            } else {
+                // populate list with items
+                UICtrl.populateItemList(items);
+            }
             // load event listeners
             loadEventListeners();
         }
